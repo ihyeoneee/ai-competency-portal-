@@ -131,10 +131,10 @@ function gradeLabel(score) {
 
 // ── LPA 프로파일 분류 ──────────────────────────────────
 function classifyProfile(scScores) {
-  const myScores = scScores.map(s => s.score);
+  const myDomainScores = DOMAIN_GROUPS.map(g => groupAvg(scScores, g.scIds));
   let minDist = Infinity, best = null;
   LPA_PROFILES.forEach(p => {
-    const dist = Math.sqrt(myScores.reduce((sum, v, i) => sum + Math.pow(v - p.means[i], 2), 0));
+    const dist = Math.sqrt(myDomainScores.reduce((sum, v, i) => sum + Math.pow(v - p.means[i], 2), 0));
     if (dist < minDist) { minDist = dist; best = p; }
   });
   return best;
@@ -146,7 +146,8 @@ function renderProfileCard(profile) {
     <div style="background:${profile.bgColor};border:2px solid ${profile.borderColor};border-radius:16px;padding:28px;text-align:center;margin-bottom:0">
       <div style="font-size:2.8rem;margin-bottom:8px">${profile.emoji}</div>
       <div style="font-size:0.85rem;color:${profile.color};font-weight:700;margin-bottom:4px">나의 AI·디지털 역량 유형</div>
-      <div style="font-size:2rem;font-weight:900;color:${profile.color};margin-bottom:12px">${profile.name}</div>
+      <div style="font-size:2rem;font-weight:900;color:${profile.color};margin-bottom:6px">${profile.name}</div>
+      <div style="display:inline-block;background:${profile.borderColor};color:${profile.color};border-radius:99px;padding:4px 14px;font-size:0.8rem;font-weight:700;margin-bottom:14px">${profile.pattern}</div>
       <div style="font-size:0.9rem;color:#374151;line-height:1.8;margin-bottom:20px;text-align:left;background:#fff;border-radius:10px;padding:14px 16px">${profile.desc}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;text-align:left;margin-bottom:16px">
         <div style="background:#fff;border-radius:10px;padding:14px">
@@ -334,58 +335,82 @@ function renderDomainBarChart(domainScores, stageBench, totalBench) {
   });
 }
 
-// ── 생애주기별 하위역량 비교 차트 ────────────────────────
+// ── 5개 역량영역 × 4 생애주기 비교 차트 ─────────────────
+const DOMAIN_GROUPS = [
+  { label: '이해',          scIds: [1,2,3,4] },
+  { label: '교육설계\n및 개발', scIds: [5,6,8] },
+  { label: '교육운영',       scIds: [9,10,11] },
+  { label: '교육평가',       scIds: [7,12,13] },
+  { label: '전문성\n개발',   scIds: [14,15] },
+];
+
+function groupAvg(source, scIds) {
+  if (Array.isArray(source)) {
+    const vals = scIds.map(id => source.find(s => s.id === id).score);
+    return parseFloat((vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2));
+  }
+  const vals = scIds.map(id => source.subCompetencies[id].avg);
+  return parseFloat((vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2));
+}
+
 function renderStageComparisonChart(scScores) {
   const ctx = document.getElementById('stage-compare-chart').getContext('2d');
   if (window._stageComparisonChart) window._stageComparisonChart.destroy();
 
   const bench = benchmarkData.stages;
   const stageIds = ['입직기', '성장기', '발전기', '심화기'];
-  const stageColors = [
-    'rgba(99,179,237,0.8)',
-    'rgba(72,187,120,0.8)',
-    'rgba(246,173,85,0.8)',
-    'rgba(245,101,101,0.8)',
-  ];
-  const stageBorderColors = ['#63B3ED', '#48BB78', '#F6AD55', '#F56565'];
+  const stageColors       = ['rgba(99,179,237,0.85)','rgba(72,187,120,0.85)','rgba(246,173,85,0.85)','rgba(245,101,101,0.85)'];
+  const stageBorderColors = ['#63B3ED','#48BB78','#F6AD55','#F56565'];
 
   const datasets = [
     {
       label: '내 점수',
-      data: scScores.map(s => parseFloat(s.score.toFixed(2))),
+      data: DOMAIN_GROUPS.map(g => groupAvg(scScores, g.scIds)),
       backgroundColor: 'rgba(59,110,248,0.85)',
       borderColor: '#3B6EF8',
       borderWidth: 2,
-      borderRadius: 4,
+      borderRadius: 6,
     },
     ...stageIds.map((stage, i) => ({
       label: `${stage} 평균`,
-      data: scScores.map(s => parseFloat(bench[stage].subCompetencies[s.id].avg.toFixed(2))),
+      data: DOMAIN_GROUPS.map(g => groupAvg(bench[stage], g.scIds)),
       backgroundColor: stageColors[i],
       borderColor: stageBorderColors[i],
       borderWidth: 1.5,
-      borderRadius: 4,
+      borderRadius: 6,
     }))
   ];
 
   window._stageComparisonChart = new Chart(ctx, {
     type: 'bar',
-    data: { labels: SC_SHORT_NAMES, datasets },
+    data: { labels: DOMAIN_GROUPS.map(g => g.label), datasets },
     options: {
-      indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
         legend: { position: 'top', labels: { font: { size: 11 }, boxWidth: 14, padding: 10 } },
-        tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${c.parsed.x.toFixed(2)}점` } },
+        tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${c.parsed.y.toFixed(2)}점` } },
       },
       scales: {
-        x: { min: 1, max: 5, ticks: { stepSize: 0.5 }, grid: { color: '#E2E8F0' },
+        y: { min: 1, max: 5, ticks: { stepSize: 0.5 }, grid: { color: '#E2E8F0' },
              title: { display: true, text: '점수 (5점 만점)', font: { size: 11 } } },
-        y: { grid: { display: false }, ticks: { font: { size: 10 } } }
+        x: { grid: { display: false }, ticks: { font: { size: 12, weight: 'bold' }, maxRotation: 0 } }
       },
       animation: { duration: 800 }
-    }
+    },
+    plugins: [{
+      id: 'valueLabels',
+      afterDatasetsDraw(chart) {
+        const { ctx } = chart;
+        chart.getDatasetMeta(0).data.forEach((bar, idx) => {
+          const val = chart.data.datasets[0].data[idx];
+          ctx.fillStyle = '#1E293B';
+          ctx.font = 'bold 12px Noto Sans KR, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(val.toFixed(2), bar.x, bar.y - 6);
+        });
+      }
+    }]
   });
 }
 
