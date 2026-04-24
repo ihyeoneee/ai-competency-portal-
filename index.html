@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>교직생애주기 기반 개별 역량분석 및 맞춤형 연수 추천 | AIEDAP 호남권역</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<!-- ── 상단 헤더 ── -->
+<header class="site-header">
+  <div class="container header-inner">
+    <div class="header-logo-area">
+      <img src="https://aiedap.or.kr/wp-content/uploads/2023/04/aiedap_logo-remove.png"
+           alt="AIEDAP 로고" class="header-logo">
+      <div class="header-text">
+        <div class="header-region">AIEDAP 호남권역</div>
+        <div class="header-subtitle">교직생애주기 기반 개별 역량분석 및 맞춤형 연수 추천</div>
+      </div>
+    </div>
+    <div class="header-desc">생애주기별 개별 역량분석 및 맞춤형 연수 추천</div>
+  </div>
+</header>
+
+<!-- ① 인트로 화면 -->
+<div id="screen-intro" class="screen active">
+  <div class="container">
+    <div class="card" style="text-align:center;padding:40px 28px">
+      <div style="font-size:3rem;margin-bottom:16px">📊</div>
+      <h2 style="font-size:1.4rem;font-weight:900;margin-bottom:12px">나의 AI·디지털 역량은 어느 수준일까?</h2>
+      <p style="color:var(--text-sub);font-size:0.95rem;line-height:1.7;margin-bottom:24px">
+        45개 문항으로 구성된 역량 지표를 통해 본인의<br>
+        AI·디지털 수업역량을 측정하고,<br>
+        전국 교사 <strong>1,281명</strong>의 데이터와 비교해보세요.
+      </p>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px;text-align:left">
+        <div style="background:#EEF3FF;border-radius:10px;padding:14px">
+          <div style="font-size:1.4rem">🧩</div>
+          <div style="font-size:0.85rem;font-weight:700;margin-top:6px">3개 상위역량</div>
+          <div style="font-size:0.78rem;color:var(--text-sub)">이해·활용·전문성 개발</div>
+        </div>
+        <div style="background:#EDFAF4;border-radius:10px;padding:14px">
+          <div style="font-size:1.4rem">📝</div>
+          <div style="font-size:0.85rem;font-weight:700;margin-top:6px">45문항 측정</div>
+          <div style="font-size:0.78rem;color:var(--text-sub)">약 8~10분 소요</div>
+        </div>
+        <div style="background:#FFF7ED;border-radius:10px;padding:14px">
+          <div style="font-size:1.4rem">🎯</div>
+          <div style="font-size:0.85rem;font-weight:700;margin-top:6px">맞춤 연수 추천</div>
+          <div style="font-size:0.78rem;color:var(--text-sub)">생애주기별 비교 제공</div>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="padding:14px 48px;font-size:1.05rem" onclick="showScreen('screen-stage')">
+        자가진단 시작하기 →
+      </button>
+    </div>
+    <div class="card" style="padding:20px 28px">
+      <p style="font-size:0.83rem;color:var(--text-sub);line-height:1.7">
+        본 진단 도구는 <strong>탐색적 요인분석을 통한 교직생애주기 기반 교원 AI·디지털 역량지표 개발 타당화 연구</strong>
+        (한국교육학연구, 2025)를 기반으로 제작되었습니다. 전국 초·중등 교사 1,281명의 응답 데이터를 활용하여
+        집단별 비교 분석을 제공합니다. 개인 정보는 수집되지 않습니다.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ② 생애주기 선택 화면 -->
+<div id="screen-stage" class="screen">
+  <div class="container">
+    <div class="card">
+      <h2 style="font-size:1.2rem;font-weight:900;margin-bottom:8px">1단계: 교직 생애주기 선택</h2>
+      <p style="color:var(--text-sub);font-size:0.9rem">현재 교직 경력에 맞는 생애주기를 선택해 주세요.</p>
+      <div class="stage-grid" id="stage-grid"></div>
+      <button id="btn-to-survey" class="btn btn-primary btn-block" disabled
+        onclick="showScreen('screen-survey')">
+        다음: 역량 측정 시작 →
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ③ 설문 화면 -->
+<div id="screen-survey" class="screen">
+  <div class="container">
+    <div class="card" style="padding:20px 28px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-size:0.9rem;font-weight:700">AI·디지털 역량 측정 (45문항)</span>
+        <span style="font-size:0.82rem;color:var(--text-sub)">5점 척도로 응답해 주세요</span>
+      </div>
+      <div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar" style="width:0%"></div></div>
+      <div class="progress-label" id="progress-label">0 / 45 문항 완료</div>
+    </div>
+    <div id="survey-wrap"></div>
+    <div class="card" style="text-align:center">
+      <div class="alert alert-warn" id="submit-alert" style="display:none">미응답 문항이 있습니다. 모든 문항에 응답해 주세요.</div>
+      <button id="btn-submit" class="btn btn-primary" style="padding:14px 48px;font-size:1.05rem" disabled onclick="submitSurvey()">
+        결과 보기 →
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ④ 결과 화면 -->
+<div id="screen-result" class="screen">
+  <div class="container">
+
+    <!-- 종합 점수 히어로 -->
+    <div class="card result-hero">
+      <div id="result-stage-badge" class="result-stage-badge"></div>
+      <div class="result-total-score" id="result-total-score"></div>
+      <div class="result-total-label">/ 5.00점 (전체 평균)</div>
+      <div class="result-grade" id="result-grade"></div>
+      <div style="font-size:0.82rem;color:var(--text-sub);margin-top:8px" id="result-stage-avg"></div>
+    </div>
+
+    <!-- 종합 점수 세로 막대 비교 -->
+    <div class="card">
+      <h3 class="chart-title">종합 점수 비교</h3>
+      <p class="chart-desc">나의 전체 평균 점수를 집단별로 비교합니다</p>
+      <div class="chart-container-bar"><canvas id="total-bar-chart"></canvas></div>
+    </div>
+
+    <!-- 3개 상위역량별 세로 막대 비교 -->
+    <div class="card">
+      <h3 class="chart-title">3개 상위역량별 비교</h3>
+      <p class="chart-desc">각 역량 영역에서 나의 점수 vs 소속 집단 평균 vs 전체 평균</p>
+      <div class="chart-container-bar"><canvas id="domain-bar-chart"></canvas></div>
+      <div class="chart-legend">
+        <span class="legend-dot" style="background:#3B6EF8"></span> 내 점수 &nbsp;
+        <span class="legend-dot" style="background:#34C98A"></span> <span id="legend-stage-label">집단 평균</span> &nbsp;
+        <span class="legend-dot" style="background:#F7A84F"></span> 전체 평균
+      </div>
+    </div>
+
+    <!-- 생애주기별 하위역량 비교 -->
+    <div class="card">
+      <h3 class="chart-title">생애주기별 하위역량 비교</h3>
+      <p class="chart-desc">15개 하위역량에서 내 점수와 4개 생애주기 집단 평균 비교</p>
+      <div style="position:relative;height:520px;margin:16px 0 8px"><canvas id="stage-compare-chart"></canvas></div>
+    </div>
+
+    <!-- 3개 상위역량 점수 카드 -->
+    <div class="domain-scores">
+      <div class="domain-score-card understanding">
+        <div class="d-score" id="d-score-understanding">-</div>
+        <div class="d-label">AI·디지털의<br>이해</div>
+      </div>
+      <div class="domain-score-card application">
+        <div class="d-score" id="d-score-application">-</div>
+        <div class="d-label">AI·디지털의<br>교육적 활용</div>
+      </div>
+      <div class="domain-score-card professional">
+        <div class="d-score" id="d-score-professional">-</div>
+        <div class="d-label">AI·디지털 활용<br>전문성 개발</div>
+      </div>
+    </div>
+
+    <!-- 15개 하위역량 레이더 차트 -->
+    <div class="card">
+      <h3 class="chart-title">15개 하위역량 프로파일</h3>
+      <p class="chart-desc">파란선: 내 점수 &nbsp;|&nbsp; 초록선: 생애주기 집단 평균 &nbsp;|&nbsp; 주황선: 전체 평균</p>
+      <div class="chart-container"><canvas id="radar-chart"></canvas></div>
+    </div>
+
+    <!-- 역량별 비교표 -->
+    <div class="card">
+      <h3 class="chart-title">역량별 상세 비교 <span style="font-size:0.82rem;font-weight:400;color:var(--text-sub)">(낮은 점수 순)</span></h3>
+      <div style="overflow-x:auto">
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th>#</th><th>하위역량</th><th>내 점수</th><th>집단 평균</th><th>비교</th><th>진단</th>
+            </tr>
+          </thead>
+          <tbody id="compare-tbody"></tbody>
+        </table>
+      </div>
+      <div style="margin-top:10px;font-size:0.78rem;color:var(--text-sub)">
+        🔵 파란 막대: 내 점수 &nbsp;|&nbsp; 🟢 초록 막대: 집단 평균
+      </div>
+    </div>
+
+    <!-- 추천 연수 -->
+    <div class="card">
+      <h3 class="chart-title">🎯 맞춤형 연수 추천</h3>
+      <div id="rec-wrap"></div>
+    </div>
+
+    <!-- 다시하기 -->
+    <div style="text-align:center;margin-top:8px;margin-bottom:20px">
+      <button class="btn btn-outline" onclick="resetAll()">← 처음부터 다시하기</button>
+    </div>
+
+  </div>
+</div>
+
+<script src="./js/benchmark_embed.js"></script>
+<script src="./js/questions.js"></script>
+<script src="./js/app.js"></script>
+</body>
+</html>
