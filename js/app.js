@@ -129,6 +129,41 @@ function gradeLabel(score) {
   return              { text: '매우 미흡',      color: '#DC2626' };
 }
 
+// ── LPA 프로파일 분류 ──────────────────────────────────
+function classifyProfile(scScores) {
+  const myScores = scScores.map(s => s.score);
+  let minDist = Infinity, best = null;
+  LPA_PROFILES.forEach(p => {
+    const dist = Math.sqrt(myScores.reduce((sum, v, i) => sum + Math.pow(v - p.means[i], 2), 0));
+    if (dist < minDist) { minDist = dist; best = p; }
+  });
+  return best;
+}
+
+function renderProfileCard(profile) {
+  const el = document.getElementById('profile-card-wrap');
+  el.innerHTML = `
+    <div style="background:${profile.bgColor};border:2px solid ${profile.borderColor};border-radius:16px;padding:28px;text-align:center;margin-bottom:0">
+      <div style="font-size:2.8rem;margin-bottom:8px">${profile.emoji}</div>
+      <div style="font-size:0.85rem;color:${profile.color};font-weight:700;margin-bottom:4px">나의 AI·디지털 역량 유형</div>
+      <div style="font-size:2rem;font-weight:900;color:${profile.color};margin-bottom:12px">${profile.name}</div>
+      <div style="font-size:0.9rem;color:#374151;line-height:1.8;margin-bottom:20px;text-align:left;background:#fff;border-radius:10px;padding:14px 16px">${profile.desc}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;text-align:left;margin-bottom:16px">
+        <div style="background:#fff;border-radius:10px;padding:14px">
+          <div style="font-size:0.8rem;font-weight:700;color:#374151;margin-bottom:8px">✅ 강점</div>
+          ${profile.strengths.map(s => `<div style="font-size:0.82rem;color:#374151;padding:3px 0;border-bottom:1px solid #F3F4F6">· ${s}</div>`).join('')}
+        </div>
+        <div style="background:#fff;border-radius:10px;padding:14px">
+          <div style="font-size:0.8rem;font-weight:700;color:#374151;margin-bottom:8px">🎯 추천 연수</div>
+          ${profile.recs.map(r => `<div style="font-size:0.82rem;color:#374151;padding:3px 0;border-bottom:1px solid #F3F4F6">· ${r}</div>`).join('')}
+        </div>
+      </div>
+      <div style="font-size:0.78rem;color:#6B7280;background:#fff;border-radius:8px;padding:8px 14px;display:inline-block">
+        전국 교사 중 <strong style="color:${profile.color}">${profile.pct}%</strong> (${profile.n}명)가 이 유형에 해당합니다
+      </div>
+    </div>`;
+}
+
 // ── Results rendering ──────────────────────────────────
 function renderResults() {
   const { scScores, domainScores, total } = computeScores();
@@ -155,6 +190,10 @@ function renderResults() {
   ['understanding','application','professional'].forEach(d => {
     document.getElementById(`d-score-${d}`).textContent = domainScores[d].toFixed(2);
   });
+
+  // LPA 유형 분류 및 카드 표시
+  const profile = classifyProfile(scScores);
+  renderProfileCard(profile);
 
   // 범례 레이블 업데이트
   document.getElementById('legend-stage-label').textContent = `${selectedStage} 평균`;
