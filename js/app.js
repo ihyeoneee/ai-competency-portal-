@@ -444,7 +444,15 @@ function renderDomainDonuts(domainScores, stageBench) {
   });
 }
 
-// ── 하위역량 카드 ────────────────────────────────────────
+// ── 정규분포 CDF 근사 ────────────────────────────────────
+function normalCDF(z) {
+  const t = 1 / (1 + 0.2316419 * Math.abs(z));
+  const d = 0.3989423 * Math.exp(-z * z / 2);
+  const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.7814779 + t * (-1.8212560 + t * 1.3302744))));
+  return z > 0 ? 1 - p : p;
+}
+
+// ── 하위역량 퍼센타일 카드 ───────────────────────────────
 function renderSCCards(scScores, stageBench) {
   const wrap = document.getElementById('sc-cards-wrap');
   const domainInfo = {
@@ -453,62 +461,105 @@ function renderSCCards(scScores, stageBench) {
     professional:  { label: 'AI·디지털 활용 전문성 개발', color: '#F7A84F', cls: 'professional'  },
   };
 
-  let html = '';
-  ['understanding', 'application', 'professional'].forEach(domain => {
-    const d = domainInfo[domain];
-    const scs = scScores.filter(s => s.domain === domain);
-    const myAvg  = scs.reduce((s,c) => s + c.score, 0) / scs.length;
-    const grpAvg = scs.reduce((s,c) => s + stageBench.subCompetencies[c.id].avg, 0) / scs.length;
-    const domDiff = myAvg - grpAvg;
+  // 퍼센타일 계산
+  const enriched = scScores.map(sc => {
+    const b   = stageBench.subCompetencies[sc.id];
+    const z   = (sc.score - b.avg) / b.std;
+    const pct = Math.min(99, Math.max(1, Math.round(normalCDF(z) * 100)));
+    return { ...sc, benchAvg: b.avg, benchStd: b.std, pct,
+      isTop: pct >= 90, isBot: pct <= 10 };
+  });
 
-    html += `
-      <div class="sc-domain-section">
-        <div class="sc-domain-hdr">
-          <span class="domain-badge ${d.cls}">${d.label}</span>
-          <div class="sc-domain-stat">
-            <span class="sc-dom-my" style="color:${d.color}">${myAvg.toFixed(2)}</span>
-            <span class="sc-dom-sep">vs 집단</span>
-            <span class="sc-dom-grp">${grpAvg.toFixed(2)}</span>
-            <span class="sc-dom-diff" style="color:${domDiff>=0?'#059669':'#DC2626'}">
-              (${domDiff>=0?'+':''}${domDiff.toFixed(2)})
-            </span>
+  const top = enriched.filter(s => s.isTop).sort((a,b) => b.pct - a.pct);
+  const bot = enriched.filter(s => s.isBot).sort((a,b) => a.pct - b.pct);
+  const mid = enriched.filter(s => !s.isTop && !s.isBot).sort((a,b) => b.pct - a.pct);
+
+  function scCardHtml(sc, tier) {
+    const d = domainInfo[sc.domain];
+    const barColor = tier === 'top' ? '#059669' : tier === 'bot' ? '#DC2626' : d.color;
+    const pctBarW  = sc.pct;
+    return `
+      <div class="pct-card pct-card-${tier}">
+        <div class="pct-card-top">
+          <div class="pct-card-left">
+            <span class="sc-id-dot" style="background:${d.color}">${sc.id}</span>
+            <span class="pct-domain-badge ${d.cls}-light">${d.label.replace('AI·디지털의 ','').replace('AI·디지털 활용 ','')}</span>
           </div>
+          <span class="pct-badge pct-badge-${tier}">
+            ${tier === 'top' ? `상위 ${100 - sc.pct + 1}%` : tier === 'bot' ? `하위 ${sc.pct}%` : `상위 ${100 - sc.pct}%`}
+          </span>
         </div>
-        <div class="sc-card-grid">
-          ${scs.map(sc => {
-            const grp    = stageBench.subCompetencies[sc.id].avg;
-            const diff   = sc.score - grp;
-            const isWeak = diff < -0.3;
-            const isGood = diff > 0.2;
-            const myPct  = ((sc.score - 1) / 4 * 100).toFixed(1);
-            const grpPct = ((grp - 1) / 4 * 100).toFixed(1);
-            const sColor = isWeak ? '#DC2626' : isGood ? '#059669' : d.color;
-            const tag    = isWeak
-              ? '<span class="tag-weak">보완필요</span>'
-              : isGood
-              ? '<span class="tag-good">강점</span>'
-              : '<span class="tag-normal">보통</span>';
-            return `
-              <div class="sc-card ${isWeak?'sc-card-weak':isGood?'sc-card-good':''}">
-                <div class="sc-card-hdr">
-                  <span class="sc-id-dot" style="background:${d.color}">${sc.id}</span>
-                  <span class="sc-card-name">${sc.name.length>16?sc.name.substring(0,16)+'…':sc.name}</span>
-                  ${tag}
-                </div>
-                <div class="sc-score-row">
-                  <span class="sc-my-score" style="color:${sColor}">${sc.score.toFixed(2)}</span>
-                  <span class="sc-score-div">·</span>
-                  <span class="sc-grp-score">집단 ${grp.toFixed(2)}</span>
-                </div>
-                <div class="sc-bar-wrap">
-                  <div class="sc-bar-grp"  style="width:${grpPct}%"></div>
-                  <div class="sc-bar-mine" style="width:${myPct}%;background:${d.color}"></div>
-                </div>
-              </div>`;
-          }).join('')}
+        <div class="pct-card-name">${sc.name}</div>
+        <div class="pct-scores">
+          <span class="pct-my-score" style="color:${barColor}">${sc.score.toFixed(2)}점</span>
+          <span class="pct-vs">집단 평균 ${sc.benchAvg.toFixed(2)}점</span>
+        </div>
+        <div class="pct-bar-outer">
+          <div class="pct-bar-zone-bot"></div>
+          <div class="pct-bar-zone-top"></div>
+          <div class="pct-bar-needle" style="left:${pctBarW}%;background:${barColor}"></div>
+        </div>
+        <div class="pct-bar-labels">
+          <span>하위 10%</span><span>평균</span><span>상위 10%</span>
         </div>
       </div>`;
-  });
+  }
+
+  function midRowHtml(sc) {
+    const d = domainInfo[sc.domain];
+    return `
+      <div class="mid-row">
+        <span class="sc-id-dot" style="background:${d.color};width:18px;height:18px;font-size:0.65rem">${sc.id}</span>
+        <span class="mid-name">${sc.name.length > 18 ? sc.name.substring(0,18)+'…' : sc.name}</span>
+        <span class="mid-score" style="color:${d.color}">${sc.score.toFixed(2)}</span>
+        <div class="mid-pct-bar">
+          <div style="width:${sc.pct}%;height:100%;border-radius:99px;background:${d.color};opacity:0.7"></div>
+        </div>
+        <span class="mid-pct-label">상위 ${100 - sc.pct}%</span>
+      </div>`;
+  }
+
+  let html = '';
+
+  // 상위 10%
+  html += `
+    <div class="pct-section">
+      <div class="pct-section-title pct-title-top">
+        <span class="pct-title-icon">🏆</span>
+        <span>상위 10% 역량 <span class="pct-count">${top.length}개</span></span>
+        <span class="pct-title-desc">집단 상위 10%에 해당하는 강점 역량</span>
+      </div>
+      ${top.length > 0
+        ? `<div class="pct-card-grid">${top.map(s => scCardHtml(s, 'top')).join('')}</div>`
+        : `<div class="pct-empty">해당 역량이 없습니다.</div>`}
+    </div>`;
+
+  // 하위 10%
+  html += `
+    <div class="pct-section">
+      <div class="pct-section-title pct-title-bot">
+        <span class="pct-title-icon">📌</span>
+        <span>하위 10% 역량 <span class="pct-count">${bot.length}개</span></span>
+        <span class="pct-title-desc">집중적인 역량 개발이 필요한 영역</span>
+      </div>
+      ${bot.length > 0
+        ? `<div class="pct-card-grid">${bot.map(s => scCardHtml(s, 'bot')).join('')}</div>`
+        : `<div class="pct-empty">해당 역량이 없습니다.</div>`}
+    </div>`;
+
+  // 그 외 (간소 리스트)
+  if (mid.length > 0) {
+    html += `
+      <div class="pct-section">
+        <div class="pct-section-title pct-title-mid">
+          <span class="pct-title-icon">📊</span>
+          <span>그 외 역량 <span class="pct-count">${mid.length}개</span></span>
+          <span class="pct-title-desc">하위 10% ~ 상위 10% 사이 역량</span>
+        </div>
+        <div class="mid-list">${mid.map(s => midRowHtml(s)).join('')}</div>
+      </div>`;
+  }
+
   wrap.innerHTML = html;
 }
 

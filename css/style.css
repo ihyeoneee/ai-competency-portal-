@@ -218,52 +218,7 @@ body { font-family: 'Pretendard', 'Noto Sans KR', sans-serif; background: var(--
   margin-top: 4px;
 }
 
-/* ── SC Cards ── */
-.sc-domain-section { margin-bottom: 28px; }
-.sc-domain-hdr {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 12px;
-  padding-bottom: 10px;
-  border-bottom: 2px solid var(--border);
-}
-.sc-domain-stat {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.83rem;
-}
-.sc-dom-my   { font-size: 1.1rem; font-weight: 900; }
-.sc-dom-sep  { color: var(--text-sub); font-size: 0.75rem; }
-.sc-dom-grp  { color: var(--text-sub); }
-.sc-dom-diff { font-weight: 700; }
-
-.sc-card-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-.sc-card {
-  background: #FAFBFE;
-  border: 1.5px solid var(--border);
-  border-radius: 12px;
-  padding: 12px 14px;
-  transition: box-shadow 0.15s;
-}
-.sc-card:hover { box-shadow: 0 2px 12px rgba(59,110,248,0.1); }
-.sc-card-weak { border-color: #FECACA; background: #FFF8F8; }
-.sc-card-good { border-color: #A7F3D0; background: #F0FDF9; }
-
-.sc-card-hdr {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  margin-bottom: 7px;
-  flex-wrap: wrap;
-}
+/* ── SC ID dot (공통) ── */
 .sc-id-dot {
   display: inline-flex;
   align-items: center;
@@ -275,52 +230,175 @@ body { font-family: 'Pretendard', 'Noto Sans KR', sans-serif; background: var(--
   font-size: 0.7rem;
   font-weight: 700;
   flex-shrink: 0;
-  margin-top: 1px;
 }
-.sc-card-name {
-  font-size: 0.8rem;
-  font-weight: 600;
-  flex: 1;
-  color: var(--text);
-  line-height: 1.4;
+
+/* ── Percentile Sections ── */
+.pct-section { margin-bottom: 28px; }
+
+.pct-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
 }
-.tag-normal {
-  background: #F1F5F9;
-  color: #64748B;
-  border-radius: 6px;
-  padding: 2px 7px;
+.pct-title-top { background: #ECFDF5; border-left: 4px solid #059669; }
+.pct-title-bot { background: #FFF5F5; border-left: 4px solid #DC2626; }
+.pct-title-mid { background: #F8FAFF; border-left: 4px solid #94A3B8; }
+
+.pct-title-icon { font-size: 1.1rem; }
+.pct-section-title > span:nth-child(2) { font-size: 0.95rem; font-weight: 700; }
+.pct-count { font-size: 0.85rem; font-weight: 900; margin-left: 4px; }
+.pct-title-desc { font-size: 0.78rem; color: var(--text-sub); margin-left: 4px; }
+
+.pct-card-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* ── Percentile Card ── */
+.pct-card {
+  border-radius: 14px;
+  padding: 14px 16px;
+  border: 1.5px solid;
+  transition: box-shadow 0.15s;
+}
+.pct-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.09); }
+.pct-card-top { background: #F0FDF9; border-color: #6EE7B7; }
+.pct-card-bot { background: #FFF5F5; border-color: #FCA5A5; }
+.pct-card-mid { background: #FAFBFE; border-color: var(--border); }
+
+.pct-card-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.pct-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.pct-card-left { display: flex; align-items: center; gap: 6px; }
+
+.pct-domain-badge {
   font-size: 0.7rem;
   font-weight: 700;
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+.understanding-light { background: #EEF3FF; color: #3B6EF8; }
+.application-light   { background: #EDFAF4; color: #059669; }
+.professional-light  { background: #FFF7ED; color: #D97706; }
+
+.pct-badge {
+  font-size: 0.75rem;
+  font-weight: 900;
+  border-radius: 99px;
+  padding: 3px 10px;
   flex-shrink: 0;
 }
-.sc-score-row {
+.pct-badge-top { background: #D1FAE5; color: #059669; }
+.pct-badge-bot { background: #FEE2E2; color: #DC2626; }
+.pct-badge-mid { background: #E0E7FF; color: #4338CA; }
+
+.pct-card-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+.pct-scores {
   display: flex;
   align-items: baseline;
-  gap: 5px;
-  margin-bottom: 7px;
+  gap: 8px;
+  margin-bottom: 10px;
 }
-.sc-my-score  { font-size: 1.05rem; font-weight: 900; }
-.sc-score-div { color: var(--text-sub); font-size: 0.75rem; }
-.sc-grp-score { font-size: 0.78rem; color: var(--text-sub); }
+.pct-my-score { font-size: 1.15rem; font-weight: 900; }
+.pct-vs       { font-size: 0.78rem; color: var(--text-sub); }
 
-.sc-bar-wrap {
+/* ── Percentile Bar ── */
+.pct-bar-outer {
+  position: relative;
+  height: 8px;
+  background: #E2E8F0;
+  border-radius: 99px;
+  margin-bottom: 4px;
+  overflow: visible;
+}
+.pct-bar-zone-bot {
+  position: absolute;
+  left: 0; top: 0;
+  width: 10%;
+  height: 100%;
+  background: rgba(220,38,38,0.2);
+  border-radius: 99px 0 0 99px;
+}
+.pct-bar-zone-top {
+  position: absolute;
+  right: 0; top: 0;
+  width: 10%;
+  height: 100%;
+  background: rgba(5,150,105,0.2);
+  border-radius: 0 99px 99px 0;
+}
+.pct-bar-needle {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2.5px solid #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+.pct-bar-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.65rem;
+  color: var(--text-sub);
+  margin-top: 2px;
+}
+
+/* ── Middle list ── */
+.mid-list { display: flex; flex-direction: column; gap: 6px; }
+.mid-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #FAFBFE;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.mid-name { font-size: 0.82rem; font-weight: 600; flex: 1; color: var(--text); }
+.mid-score { font-size: 0.88rem; font-weight: 700; min-width: 36px; text-align: right; }
+.mid-pct-bar {
+  width: 80px;
+  height: 6px;
   background: var(--border);
   border-radius: 99px;
-  height: 6px;
-  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
 }
-.sc-bar-grp {
-  position: absolute;
-  top: 0; left: 0;
-  height: 6px;
-  border-radius: 99px;
-  background: rgba(52,201,138,0.45);
-}
-.sc-bar-mine {
-  position: absolute;
-  top: 0; left: 0;
-  height: 6px;
-  border-radius: 99px;
+.mid-pct-label { font-size: 0.72rem; color: var(--text-sub); min-width: 48px; text-align: right; }
+
+.pct-empty {
+  text-align: center;
+  color: var(--text-sub);
+  font-size: 0.85rem;
+  padding: 16px;
+  background: #F8FAFF;
+  border-radius: 10px;
+  border: 1px dashed var(--border);
 }
 
 /* ── Responsive ── */
