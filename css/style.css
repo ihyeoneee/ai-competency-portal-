@@ -183,6 +183,16 @@ body { font-family: 'Pretendard', 'Noto Sans KR', sans-serif; background: var(--
   font-family: inherit;
 }
 .auth-input:focus { border-color: var(--primary); }
+.auth-select { color: var(--text); appearance: auto; }
+.auth-divider {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-sub);
+  text-align: center;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+  margin: 4px 0 10px;
+}
 .auth-msg {
   font-size: 0.83rem;
   padding: 10px 12px;

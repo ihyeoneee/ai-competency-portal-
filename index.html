@@ -27,11 +27,41 @@
     <div id="auth-form-wrap">
       <input class="auth-input" type="email" id="auth-email" placeholder="이메일 주소">
       <input class="auth-input" type="password" id="auth-password" placeholder="비밀번호 (6자 이상)">
+
+      <!-- 회원가입 전용 추가 정보 -->
+      <div id="signup-extra" style="display:none">
+        <div class="auth-divider">추가 정보 입력</div>
+        <input class="auth-input" type="text" id="auth-name" placeholder="이름">
+        <input class="auth-input" type="text" id="auth-school" placeholder="학교명">
+        <select class="auth-input auth-select" id="auth-office">
+          <option value="">소속 교육청 선택</option>
+          <option>서울특별시교육청</option>
+          <option>부산광역시교육청</option>
+          <option>대구광역시교육청</option>
+          <option>인천광역시교육청</option>
+          <option>광주광역시교육청</option>
+          <option>대전광역시교육청</option>
+          <option>울산광역시교육청</option>
+          <option>세종특별자치시교육청</option>
+          <option>경기도교육청</option>
+          <option>강원특별자치도교육청</option>
+          <option>충청북도교육청</option>
+          <option>충청남도교육청</option>
+          <option>전북특별자치도교육청</option>
+          <option>전라남도교육청</option>
+          <option>경상북도교육청</option>
+          <option>경상남도교육청</option>
+          <option>제주특별자치도교육청</option>
+        </select>
+        <input class="auth-input" type="text" id="auth-subject" placeholder="담당 교과목 (예: 수학, 영어)">
+        <input class="auth-input" type="number" id="auth-years" placeholder="교직경력 (년수)" min="0" max="50">
+      </div>
+
       <div id="auth-msg" class="auth-msg" style="display:none"></div>
       <button class="btn btn-primary btn-block" id="auth-btn" onclick="handleAuth()">로그인</button>
     </div>
     <div style="text-align:center;margin-top:14px;font-size:0.78rem;color:var(--text-sub)">
-      개인정보는 수집되지 않으며, 이메일은 로그인 용도로만 사용됩니다.
+      수집된 정보는 연구 목적으로만 사용됩니다.
     </div>
   </div>
 </div>

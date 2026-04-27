@@ -48,6 +48,7 @@ function switchTab(mode) {
   document.getElementById('tab-login').classList.toggle('active', mode === 'login');
   document.getElementById('tab-signup').classList.toggle('active', mode === 'signup');
   document.getElementById('auth-btn').textContent = mode === 'login' ? '로그인' : '회원가입';
+  document.getElementById('signup-extra').style.display = mode === 'signup' ? 'block' : 'none';
   clearAuthMsg();
 }
 function clearAuthMsg() {
@@ -76,9 +77,30 @@ async function handleAuth() {
     const { error } = await signIn(email, password);
     if (error) showAuthMsg('이메일 또는 비밀번호가 올바르지 않습니다.', 'error');
   } else {
-    const { error } = await signUp(email, password);
-    if (error) showAuthMsg(error.message.includes('already') ? '이미 가입된 이메일입니다.' : '회원가입에 실패했습니다.', 'error');
-    else showAuthMsg('가입 완료! 이메일을 확인해 인증 후 로그인해주세요.', 'success');
+    const name    = document.getElementById('auth-name').value.trim();
+    const school  = document.getElementById('auth-school').value.trim();
+    const office  = document.getElementById('auth-office').value;
+    const subject = document.getElementById('auth-subject').value.trim();
+    const years   = parseInt(document.getElementById('auth-years').value) || 0;
+    if (!name || !school || !office || !subject) {
+      showAuthMsg('모든 항목을 입력해주세요.', 'error');
+      btn.disabled = false;
+      btn.textContent = '회원가입';
+      return;
+    }
+    const { data, error } = await signUp(email, password);
+    if (error) {
+      showAuthMsg(error.message.includes('already') ? '이미 가입된 이메일입니다.' : '회원가입에 실패했습니다.', 'error');
+    } else {
+      // 프로필 저장
+      if (data?.user) {
+        await _supabase.from('profiles').insert({
+          id: data.user.id, name, school,
+          education_office: office, subject, teaching_years: years
+        });
+      }
+      showAuthMsg('가입 완료! 이메일 인증 후 로그인해주세요.', 'success');
+    }
   }
 
   btn.disabled = false;
