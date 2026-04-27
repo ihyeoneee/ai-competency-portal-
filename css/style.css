@@ -130,10 +130,208 @@ body { font-family: 'Pretendard', 'Noto Sans KR', sans-serif; background: var(--
 .alert { padding: 12px 16px; border-radius: 8px; font-size: 0.87rem; margin-bottom: 12px; }
 .alert-warn { background: #FFF7ED; border: 1px solid #FED7AA; color: #9A3412; }
 
+/* ── Gauge Charts ── */
+.gauge-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  padding: 16px 0 8px;
+}
+.gauge-item { text-align: center; }
+.gauge-outer {
+  width: 130px;
+  height: 68px;
+  overflow: hidden;
+  margin: 0 auto;
+}
+.gauge-outer canvas {
+  display: block;
+}
+.gauge-score-val {
+  font-size: 1.25rem;
+  font-weight: 900;
+  margin-top: 2px;
+  line-height: 1;
+}
+.gauge-label-txt {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-sub);
+  line-height: 1.35;
+  margin-top: 4px;
+}
+.gauge-diff {
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-top: 3px;
+}
+
+/* ── Domain Donut Charts ── */
+.domain-donut-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  padding: 16px 0 8px;
+}
+.domain-donut-item { text-align: center; }
+.donut-ring-wrap {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  margin: 0 auto;
+}
+.donut-ring-wrap canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+.donut-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+}
+.donut-center .donut-score {
+  font-size: 1.55rem;
+  font-weight: 900;
+  color: var(--text);
+  line-height: 1;
+}
+.donut-center .donut-max {
+  font-size: 0.7rem;
+  color: var(--text-sub);
+  margin-top: 3px;
+}
+.donut-label {
+  font-size: 0.83rem;
+  font-weight: 700;
+  margin-top: 12px;
+  line-height: 1.5;
+}
+.donut-label.understanding-col { color: var(--understanding); }
+.donut-label.application-col   { color: var(--application); }
+.donut-label.professional-col  { color: var(--professional); }
+.donut-gavg {
+  font-size: 0.75rem;
+  color: var(--text-sub);
+  margin-top: 4px;
+}
+
+/* ── SC Cards ── */
+.sc-domain-section { margin-bottom: 28px; }
+.sc-domain-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--border);
+}
+.sc-domain-stat {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.83rem;
+}
+.sc-dom-my   { font-size: 1.1rem; font-weight: 900; }
+.sc-dom-sep  { color: var(--text-sub); font-size: 0.75rem; }
+.sc-dom-grp  { color: var(--text-sub); }
+.sc-dom-diff { font-weight: 700; }
+
+.sc-card-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.sc-card {
+  background: #FAFBFE;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  transition: box-shadow 0.15s;
+}
+.sc-card:hover { box-shadow: 0 2px 12px rgba(59,110,248,0.1); }
+.sc-card-weak { border-color: #FECACA; background: #FFF8F8; }
+.sc-card-good { border-color: #A7F3D0; background: #F0FDF9; }
+
+.sc-card-hdr {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-bottom: 7px;
+  flex-wrap: wrap;
+}
+.sc-id-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.sc-card-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  flex: 1;
+  color: var(--text);
+  line-height: 1.4;
+}
+.tag-normal {
+  background: #F1F5F9;
+  color: #64748B;
+  border-radius: 6px;
+  padding: 2px 7px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.sc-score-row {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  margin-bottom: 7px;
+}
+.sc-my-score  { font-size: 1.05rem; font-weight: 900; }
+.sc-score-div { color: var(--text-sub); font-size: 0.75rem; }
+.sc-grp-score { font-size: 0.78rem; color: var(--text-sub); }
+
+.sc-bar-wrap {
+  background: var(--border);
+  border-radius: 99px;
+  height: 6px;
+  position: relative;
+}
+.sc-bar-grp {
+  position: absolute;
+  top: 0; left: 0;
+  height: 6px;
+  border-radius: 99px;
+  background: rgba(52,201,138,0.45);
+}
+.sc-bar-mine {
+  position: absolute;
+  top: 0; left: 0;
+  height: 6px;
+  border-radius: 99px;
+}
+
 /* ── Responsive ── */
 @media (max-width: 600px) {
   .stage-grid { grid-template-columns: 1fr; }
   .domain-scores { grid-template-columns: 1fr; }
   .likert-btn { font-size: 0.7rem; padding: 6px 2px; }
   .result-total-score { font-size: 2.4rem; }
+  .gauge-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .gauge-outer { width: 88px; height: 46px; }
+  .domain-donut-grid { grid-template-columns: 1fr; }
+  .donut-ring-wrap { width: 120px; height: 120px; }
+  .sc-card-grid { grid-template-columns: 1fr; }
 }

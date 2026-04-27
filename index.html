@@ -139,26 +139,51 @@
       </div>
     </div>
 
-    <!-- 5개 역량영역 × 4 생애주기 비교 -->
+    <!-- 5개 역량영역 게이지 -->
     <div class="card">
-      <h3 class="chart-title">5개 역량영역 × 4 생애주기 비교</h3>
-      <p class="chart-desc">이해 · 교육설계 및 개발 · 교육운영 · 교육평가 · 전문성개발 영역에서 내 점수와 생애주기별 평균 비교</p>
-      <div style="position:relative;height:340px;margin:16px 0 8px"><canvas id="stage-compare-chart"></canvas></div>
+      <h3 class="chart-title">5개 역량영역 프로파일</h3>
+      <p class="chart-desc">각 역량영역의 내 점수 &nbsp;|&nbsp; ▲▼ 집단 평균 대비</p>
+      <div class="gauge-grid" id="gauge-grid"></div>
     </div>
 
-    <!-- 3개 상위역량 점수 카드 -->
-    <div class="domain-scores">
-      <div class="domain-score-card understanding">
-        <div class="d-score" id="d-score-understanding">-</div>
-        <div class="d-label">AI·디지털의<br>이해</div>
-      </div>
-      <div class="domain-score-card application">
-        <div class="d-score" id="d-score-application">-</div>
-        <div class="d-label">AI·디지털의<br>교육적 활용</div>
-      </div>
-      <div class="domain-score-card professional">
-        <div class="d-score" id="d-score-professional">-</div>
-        <div class="d-label">AI·디지털 활용<br>전문성 개발</div>
+    <!-- 3개 상위역량 도넛 차트 -->
+    <div class="card">
+      <h3 class="chart-title">상위역량별 점수</h3>
+      <p class="chart-desc">바깥 링: 내 점수 &nbsp;|&nbsp; 안쪽 링: 집단 평균</p>
+      <div class="domain-donut-grid">
+        <div class="domain-donut-item">
+          <div class="donut-ring-wrap">
+            <canvas id="donut-understanding"></canvas>
+            <div class="donut-center">
+              <div class="donut-score" id="d-score-understanding">-</div>
+              <div class="donut-max">/ 5점</div>
+            </div>
+          </div>
+          <div class="donut-label understanding-col">AI·디지털의<br>이해</div>
+          <div class="donut-gavg" id="donut-gavg-understanding"></div>
+        </div>
+        <div class="domain-donut-item">
+          <div class="donut-ring-wrap">
+            <canvas id="donut-application"></canvas>
+            <div class="donut-center">
+              <div class="donut-score" id="d-score-application">-</div>
+              <div class="donut-max">/ 5점</div>
+            </div>
+          </div>
+          <div class="donut-label application-col">AI·디지털의<br>교육적 활용</div>
+          <div class="donut-gavg" id="donut-gavg-application"></div>
+        </div>
+        <div class="domain-donut-item">
+          <div class="donut-ring-wrap">
+            <canvas id="donut-professional"></canvas>
+            <div class="donut-center">
+              <div class="donut-score" id="d-score-professional">-</div>
+              <div class="donut-max">/ 5점</div>
+            </div>
+          </div>
+          <div class="donut-label professional-col">AI·디지털 활용<br>전문성 개발</div>
+          <div class="donut-gavg" id="donut-gavg-professional"></div>
+        </div>
       </div>
     </div>
 
@@ -169,22 +194,11 @@
       <div class="chart-container"><canvas id="radar-chart"></canvas></div>
     </div>
 
-    <!-- 역량별 비교표 -->
+    <!-- 역량별 상세 비교 (카드형) -->
     <div class="card">
-      <h3 class="chart-title">역량별 상세 비교 <span style="font-size:0.82rem;font-weight:400;color:var(--text-sub)">(낮은 점수 순)</span></h3>
-      <div style="overflow-x:auto">
-        <table class="compare-table">
-          <thead>
-            <tr>
-              <th>#</th><th>하위역량</th><th>내 점수</th><th>집단 평균</th><th>비교</th><th>진단</th>
-            </tr>
-          </thead>
-          <tbody id="compare-tbody"></tbody>
-        </table>
-      </div>
-      <div style="margin-top:10px;font-size:0.78rem;color:var(--text-sub)">
-        🔵 파란 막대: 내 점수 &nbsp;|&nbsp; 🟢 초록 막대: 집단 평균
-      </div>
+      <h3 class="chart-title">역량별 상세 비교</h3>
+      <p class="chart-desc">상위역량별 하위역량 점수 &nbsp;|&nbsp; 파란 막대: 내 점수 &nbsp;초록 막대: 집단 평균</p>
+      <div id="sc-cards-wrap"></div>
     </div>
 
     <!-- 추천 연수 -->

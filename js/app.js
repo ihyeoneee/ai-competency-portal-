@@ -2,6 +2,8 @@
 let selectedStage = null;
 let answers = new Array(45).fill(null);
 let benchmarkData = null;
+const _gaugeCharts = {};
+const GAUGE_COLORS = ['#4F8EF7', '#34C98A', '#F7A84F', '#F56565', '#9F7AEA'];
 
 // ── Init ───────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -187,11 +189,6 @@ function renderResults() {
       Object.values(totalBench.subCompetencies).length
     ).toFixed(2)}`;
 
-  // Domain scores (카드)
-  ['understanding','application','professional'].forEach(d => {
-    document.getElementById(`d-score-${d}`).textContent = domainScores[d].toFixed(2);
-  });
-
   // LPA 유형 분류 및 카드 표시
   const profile = classifyProfile(scScores);
   renderProfileCard(profile);
@@ -205,14 +202,17 @@ function renderResults() {
   // 영역별 세로 막대 차트
   renderDomainBarChart(domainScores, stageBench, totalBench);
 
-  // 생애주기별 하위역량 비교 차트
-  renderStageComparisonChart(scScores);
+  // 5개 역량영역 게이지 차트
+  renderDomainGauges(scScores, stageBench);
+
+  // 상위역량 도넛 차트
+  renderDomainDonuts(domainScores, stageBench);
 
   // 레이더 차트
   renderRadarChart(scScores, stageBench, totalBench);
 
-  // 비교표
-  renderCompareTable(scScores, stageBench, totalBench);
+  // 하위역량 카드
+  renderSCCards(scScores, stageBench);
 
   // 추천 연수
   renderRecommendations(scScores, domainScores);
@@ -335,13 +335,13 @@ function renderDomainBarChart(domainScores, stageBench, totalBench) {
   });
 }
 
-// ── 5개 역량영역 × 4 생애주기 비교 차트 ─────────────────
+// ── 5개 역량영역 정의 ────────────────────────────────────
 const DOMAIN_GROUPS = [
-  { label: '이해',          scIds: [1,2,3,4] },
-  { label: '교육설계\n및 개발', scIds: [5,6,8] },
-  { label: '교육운영',       scIds: [9,10,11] },
-  { label: '교육평가',       scIds: [7,12,13] },
-  { label: '전문성\n개발',   scIds: [14,15] },
+  { label: '이해',       shortLabel: '이해',        scIds: [1,2,3,4] },
+  { label: '교육설계·개발', shortLabel: '교육설계',  scIds: [5,6,8] },
+  { label: '교육운영',   shortLabel: '교육운영',     scIds: [9,10,11] },
+  { label: '교육평가',   shortLabel: '교육평가',     scIds: [7,12,13] },
+  { label: '전문성 개발', shortLabel: '전문성',      scIds: [14,15] },
 ];
 
 function groupAvg(source, scIds) {
@@ -353,65 +353,163 @@ function groupAvg(source, scIds) {
   return parseFloat((vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2));
 }
 
-function renderStageComparisonChart(scScores) {
-  const ctx = document.getElementById('stage-compare-chart').getContext('2d');
-  if (window._stageComparisonChart) window._stageComparisonChart.destroy();
+// ── 5개 역량영역 게이지 차트 ─────────────────────────────
+function renderDomainGauges(scScores, stageBench) {
+  const grid = document.getElementById('gauge-grid');
+  Object.values(_gaugeCharts).forEach(c => { try { c.destroy(); } catch(e) {} });
+  for (const k in _gaugeCharts) delete _gaugeCharts[k];
 
-  const bench = benchmarkData.stages;
-  const stageIds = ['입직기', '성장기', '발전기', '심화기'];
-  const stageColors       = ['rgba(99,179,237,0.85)','rgba(72,187,120,0.85)','rgba(246,173,85,0.85)','rgba(245,101,101,0.85)'];
-  const stageBorderColors = ['#63B3ED','#48BB78','#F6AD55','#F56565'];
+  grid.innerHTML = DOMAIN_GROUPS.map((g, i) => {
+    const myScore    = groupAvg(scScores, g.scIds);
+    const stageScore = groupAvg(stageBench, g.scIds);
+    const diff       = myScore - stageScore;
+    const diffColor  = diff >= 0 ? '#059669' : '#DC2626';
+    const diffSign   = diff >= 0 ? '▲' : '▼';
+    return `
+      <div class="gauge-item">
+        <div class="gauge-outer">
+          <canvas id="gauge-${i}" width="130" height="130"></canvas>
+        </div>
+        <div class="gauge-score-val" style="color:${GAUGE_COLORS[i]}">${myScore.toFixed(2)}</div>
+        <div class="gauge-label-txt">${g.label}</div>
+        <div class="gauge-diff" style="color:${diffColor}">${diffSign} ${Math.abs(diff).toFixed(2)}</div>
+      </div>`;
+  }).join('');
 
-  const datasets = [
-    {
-      label: '내 점수',
-      data: DOMAIN_GROUPS.map(g => groupAvg(scScores, g.scIds)),
-      backgroundColor: 'rgba(59,110,248,0.85)',
-      borderColor: '#3B6EF8',
-      borderWidth: 2,
-      borderRadius: 6,
-    },
-    ...stageIds.map((stage, i) => ({
-      label: `${stage} 평균`,
-      data: DOMAIN_GROUPS.map(g => groupAvg(bench[stage], g.scIds)),
-      backgroundColor: stageColors[i],
-      borderColor: stageBorderColors[i],
-      borderWidth: 1.5,
-      borderRadius: 6,
-    }))
-  ];
-
-  window._stageComparisonChart = new Chart(ctx, {
-    type: 'bar',
-    data: { labels: DOMAIN_GROUPS.map(g => g.label), datasets },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { position: 'top', labels: { font: { size: 11 }, boxWidth: 14, padding: 10 } },
-        tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${c.parsed.y.toFixed(2)}점` } },
-      },
-      scales: {
-        y: { min: 1, max: 5, ticks: { stepSize: 0.5 }, grid: { color: '#E2E8F0' },
-             title: { display: true, text: '점수 (5점 만점)', font: { size: 11 } } },
-        x: { grid: { display: false }, ticks: { font: { size: 12, weight: 'bold' }, maxRotation: 0 } }
-      },
-      animation: { duration: 800 }
-    },
-    plugins: [{
-      id: 'valueLabels',
-      afterDatasetsDraw(chart) {
-        const { ctx } = chart;
-        chart.getDatasetMeta(0).data.forEach((bar, idx) => {
-          const val = chart.data.datasets[0].data[idx];
-          ctx.fillStyle = '#1E293B';
-          ctx.font = 'bold 12px Noto Sans KR, sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText(val.toFixed(2), bar.x, bar.y - 6);
-        });
-      }
-    }]
+  requestAnimationFrame(() => {
+    DOMAIN_GROUPS.forEach((g, i) => {
+      const canvas = document.getElementById(`gauge-${i}`);
+      if (!canvas) return;
+      const myScore = groupAvg(scScores, g.scIds);
+      const filled  = Math.max(0.01, myScore - 1);
+      const empty   = Math.max(0.01, 5 - myScore);
+      _gaugeCharts[i] = new Chart(canvas.getContext('2d'), {
+        type: 'doughnut',
+        data: {
+          datasets: [{
+            data: [filled, empty],
+            backgroundColor: [GAUGE_COLORS[i], '#E2E8F0'],
+            borderWidth: 0,
+          }]
+        },
+        options: {
+          circumference: 180,
+          rotation: 180,
+          cutout: '62%',
+          responsive: false,
+          plugins: { legend: { display: false }, tooltip: { enabled: false } },
+          animation: { duration: 1000, easing: 'easeOutQuart' }
+        }
+      });
+    });
   });
+}
+
+// ── 상위역량 도넛 차트 ────────────────────────────────────
+function renderDomainDonuts(domainScores, stageBench) {
+  const configs = [
+    { key: 'understanding', color: '#4F8EF7', light: 'rgba(79,142,247,0.22)' },
+    { key: 'application',   color: '#34C98A', light: 'rgba(52,201,138,0.22)' },
+    { key: 'professional',  color: '#F7A84F', light: 'rgba(247,168,79,0.22)' },
+  ];
+  configs.forEach(({ key, color, light }) => {
+    const score = domainScores[key];
+    const scs = SUB_COMPETENCIES.filter(s => s.domain === key);
+    const grpScore = parseFloat((scs.reduce((s,c) => s + stageBench.subCompetencies[c.id].avg, 0) / scs.length).toFixed(2));
+
+    document.getElementById(`d-score-${key}`).textContent = score.toFixed(2);
+    document.getElementById(`donut-gavg-${key}`).textContent = `집단 평균 ${grpScore.toFixed(2)}`;
+
+    const canvas = document.getElementById(`donut-${key}`);
+    if (!canvas) return;
+    const existing = Chart.getChart(canvas);
+    if (existing) existing.destroy();
+
+    new Chart(canvas.getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        datasets: [
+          { data: [score, 5 - score],       backgroundColor: [color, '#E2E8F0'], borderWidth: 0, weight: 2 },
+          { data: [grpScore, 5 - grpScore], backgroundColor: [light, 'rgba(226,232,240,0.35)'], borderWidth: 0, weight: 1 },
+        ]
+      },
+      options: {
+        cutout: '52%',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { enabled: false } },
+        animation: { duration: 800 }
+      }
+    });
+  });
+}
+
+// ── 하위역량 카드 ────────────────────────────────────────
+function renderSCCards(scScores, stageBench) {
+  const wrap = document.getElementById('sc-cards-wrap');
+  const domainInfo = {
+    understanding: { label: 'AI·디지털의 이해',           color: '#4F8EF7', cls: 'understanding' },
+    application:   { label: 'AI·디지털의 교육적 활용',    color: '#34C98A', cls: 'application'   },
+    professional:  { label: 'AI·디지털 활용 전문성 개발', color: '#F7A84F', cls: 'professional'  },
+  };
+
+  let html = '';
+  ['understanding', 'application', 'professional'].forEach(domain => {
+    const d = domainInfo[domain];
+    const scs = scScores.filter(s => s.domain === domain);
+    const myAvg  = scs.reduce((s,c) => s + c.score, 0) / scs.length;
+    const grpAvg = scs.reduce((s,c) => s + stageBench.subCompetencies[c.id].avg, 0) / scs.length;
+    const domDiff = myAvg - grpAvg;
+
+    html += `
+      <div class="sc-domain-section">
+        <div class="sc-domain-hdr">
+          <span class="domain-badge ${d.cls}">${d.label}</span>
+          <div class="sc-domain-stat">
+            <span class="sc-dom-my" style="color:${d.color}">${myAvg.toFixed(2)}</span>
+            <span class="sc-dom-sep">vs 집단</span>
+            <span class="sc-dom-grp">${grpAvg.toFixed(2)}</span>
+            <span class="sc-dom-diff" style="color:${domDiff>=0?'#059669':'#DC2626'}">
+              (${domDiff>=0?'+':''}${domDiff.toFixed(2)})
+            </span>
+          </div>
+        </div>
+        <div class="sc-card-grid">
+          ${scs.map(sc => {
+            const grp    = stageBench.subCompetencies[sc.id].avg;
+            const diff   = sc.score - grp;
+            const isWeak = diff < -0.3;
+            const isGood = diff > 0.2;
+            const myPct  = ((sc.score - 1) / 4 * 100).toFixed(1);
+            const grpPct = ((grp - 1) / 4 * 100).toFixed(1);
+            const sColor = isWeak ? '#DC2626' : isGood ? '#059669' : d.color;
+            const tag    = isWeak
+              ? '<span class="tag-weak">보완필요</span>'
+              : isGood
+              ? '<span class="tag-good">강점</span>'
+              : '<span class="tag-normal">보통</span>';
+            return `
+              <div class="sc-card ${isWeak?'sc-card-weak':isGood?'sc-card-good':''}">
+                <div class="sc-card-hdr">
+                  <span class="sc-id-dot" style="background:${d.color}">${sc.id}</span>
+                  <span class="sc-card-name">${sc.name.length>16?sc.name.substring(0,16)+'…':sc.name}</span>
+                  ${tag}
+                </div>
+                <div class="sc-score-row">
+                  <span class="sc-my-score" style="color:${sColor}">${sc.score.toFixed(2)}</span>
+                  <span class="sc-score-div">·</span>
+                  <span class="sc-grp-score">집단 ${grp.toFixed(2)}</span>
+                </div>
+                <div class="sc-bar-wrap">
+                  <div class="sc-bar-grp"  style="width:${grpPct}%"></div>
+                  <div class="sc-bar-mine" style="width:${myPct}%;background:${d.color}"></div>
+                </div>
+              </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+  });
+  wrap.innerHTML = html;
 }
 
 function renderRadarChart(scScores, stageBench, totalBench) {
@@ -441,31 +539,6 @@ function renderRadarChart(scScores, stageBench, totalBench) {
   });
 }
 
-function renderCompareTable(scScores, stageBench, totalBench) {
-  const sorted = [...scScores].sort((a,b) => a.score - b.score);
-  const tbody = document.getElementById('compare-tbody');
-  tbody.innerHTML = sorted.map(sc => {
-    const stageAvg = stageBench.subCompetencies[sc.id].avg;
-    const diff = sc.score - stageAvg;
-    const isWeak = diff < -0.3;
-    const isGood = diff > 0.2;
-    const barW = (sc.score / 5 * 100).toFixed(1);
-    const stageW = (stageAvg / 5 * 100).toFixed(1);
-    return `<tr>
-      <td style="font-size:0.8rem">${sc.id}</td>
-      <td style="font-size:0.82rem">${sc.name.substring(0,18)}…</td>
-      <td style="font-weight:700;color:${isWeak?'#DC2626':isGood?'#059669':'var(--text)'}">${sc.score.toFixed(2)}</td>
-      <td>${stageAvg.toFixed(2)}</td>
-      <td class="score-bar-cell">
-        <div class="score-bar-wrap">
-          <div class="score-bar-group" style="width:${stageW}%"></div>
-          <div class="score-bar-mine"  style="width:${barW}%"></div>
-        </div>
-      </td>
-      <td>${isWeak ? '<span class="tag-weak">보완필요</span>' : isGood ? '<span class="tag-good">강점</span>' : ''}</td>
-    </tr>`;
-  }).join('');
-}
 
 function renderRecommendations(scScores, domainScores) {
   const wrap = document.getElementById('rec-wrap');
@@ -508,9 +581,20 @@ function resetAll() {
   answers = new Array(45).fill(null);
   document.querySelectorAll('.stage-btn').forEach(b => b.classList.remove('selected'));
   document.getElementById('btn-to-survey').disabled = true;
-  if (window._radarChart)          { window._radarChart.destroy();          window._radarChart = null; }
-  if (window._totalBarChart)       { window._totalBarChart.destroy();       window._totalBarChart = null; }
-  if (window._domainBarChart)      { window._domainBarChart.destroy();      window._domainBarChart = null; }
-  if (window._stageComparisonChart){ window._stageComparisonChart.destroy();window._stageComparisonChart = null; }
+  // Gauge charts
+  Object.values(_gaugeCharts).forEach(c => { try { c.destroy(); } catch(e) {} });
+  for (const k in _gaugeCharts) delete _gaugeCharts[k];
+  // Donut charts
+  ['understanding','application','professional'].forEach(key => {
+    const canvas = document.getElementById(`donut-${key}`);
+    if (canvas) { const ch = Chart.getChart(canvas); if (ch) ch.destroy(); }
+    const el = document.getElementById(`d-score-${key}`);
+    if (el) el.textContent = '-';
+    const gavg = document.getElementById(`donut-gavg-${key}`);
+    if (gavg) gavg.textContent = '';
+  });
+  if (window._radarChart)     { window._radarChart.destroy();     window._radarChart = null; }
+  if (window._totalBarChart)  { window._totalBarChart.destroy();  window._totalBarChart = null; }
+  if (window._domainBarChart) { window._domainBarChart.destroy(); window._domainBarChart = null; }
   showScreen('screen-stage');
 }
