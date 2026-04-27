@@ -1,0 +1,36 @@
+name: 벤치마크 데이터 자동 갱신
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'   # 매주 일요일 자정 자동 실행
+  workflow_dispatch:        # 수동 실행 버튼
+
+jobs:
+  run-r-analysis:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: R 설치
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.3.0'
+
+      - name: R 패키지 설치
+        run: |
+          Rscript -e "install.packages(c('RPostgres','DBI','dplyr','tidyr','jsonlite','tidyLPA'), repos='https://cloud.r-project.org')"
+
+      - name: R 분석 실행
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: Rscript run_lpa_auto.R
+
+      - name: 변경된 데이터 파일 커밋
+        run: |
+          git config --local user.email "github-actions@github.com"
+          git config --local user.name "GitHub Actions"
+          git add js/benchmark_embed.js js/lpa_embed.js
+          git diff --staged --quiet || git commit -m "auto: 벤치마크·LPA 데이터 갱신 $(date +'%Y-%m-%d')"
+          git push

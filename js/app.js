@@ -5,12 +5,121 @@ let benchmarkData = null;
 const _gaugeCharts = {};
 const GAUGE_COLORS = ['#4F8EF7', '#34C98A', '#F7A84F', '#F56565', '#9F7AEA'];
 
+// ── Auth 상태 ──────────────────────────────────────────
+let currentUser = null;
+let authMode = 'login';
+
 // ── Init ───────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   benchmarkData = BENCHMARK_DATA;
   renderStageSelect();
   renderSurvey();
+
+  // 로그인 상태 확인
+  const { data: { session } } = await _supabase.auth.getSession();
+  if (session?.user) {
+    currentUser = session.user;
+    updateUserUI(currentUser);
+  } else {
+    showAuthModal();
+  }
+
+  // 세션 변경 감지
+  _supabase.auth.onAuthStateChange((_event, session) => {
+    currentUser = session?.user || null;
+    if (currentUser) {
+      hideAuthModal();
+      updateUserUI(currentUser);
+    } else {
+      showAuthModal();
+    }
+  });
 });
+
+// ── Auth Modal ─────────────────────────────────────────
+function showAuthModal() {
+  document.getElementById('auth-modal').classList.add('show');
+}
+function hideAuthModal() {
+  document.getElementById('auth-modal').classList.remove('show');
+}
+function switchTab(mode) {
+  authMode = mode;
+  document.getElementById('tab-login').classList.toggle('active', mode === 'login');
+  document.getElementById('tab-signup').classList.toggle('active', mode === 'signup');
+  document.getElementById('auth-btn').textContent = mode === 'login' ? '로그인' : '회원가입';
+  clearAuthMsg();
+}
+function clearAuthMsg() {
+  const el = document.getElementById('auth-msg');
+  el.style.display = 'none';
+  el.textContent = '';
+}
+function showAuthMsg(msg, type) {
+  const el = document.getElementById('auth-msg');
+  el.textContent = msg;
+  el.className = `auth-msg ${type}`;
+  el.style.display = 'block';
+}
+
+async function handleAuth() {
+  const email    = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const btn      = document.getElementById('auth-btn');
+
+  if (!email || !password) { showAuthMsg('이메일과 비밀번호를 입력해주세요.', 'error'); return; }
+
+  btn.disabled = true;
+  btn.textContent = '처리 중...';
+
+  if (authMode === 'login') {
+    const { error } = await signIn(email, password);
+    if (error) showAuthMsg('이메일 또는 비밀번호가 올바르지 않습니다.', 'error');
+  } else {
+    const { error } = await signUp(email, password);
+    if (error) showAuthMsg(error.message.includes('already') ? '이미 가입된 이메일입니다.' : '회원가입에 실패했습니다.', 'error');
+    else showAuthMsg('가입 완료! 이메일을 확인해 인증 후 로그인해주세요.', 'success');
+  }
+
+  btn.disabled = false;
+  btn.textContent = authMode === 'login' ? '로그인' : '회원가입';
+}
+
+async function handleSignOut() {
+  await signOut();
+}
+
+function updateUserUI(user) {
+  document.getElementById('user-info').style.display = 'flex';
+  document.getElementById('user-email-display').textContent = user.email;
+}
+
+// ── 결과 Supabase 저장 ────────────────────────────────
+async function saveResultToSupabase(scScores, domainScores, total) {
+  if (!currentUser) return;
+  const payload = {
+    user_id:              currentUser.id,
+    email:                currentUser.email,
+    stage:                selectedStage,
+    answers:              answers,
+    total_score:          total,
+    understanding_score:  domainScores.understanding,
+    application_score:    domainScores.application,
+    professional_score:   domainScores.professional,
+    sc_scores:            Object.fromEntries(scScores.map(s => [s.id, s.score])),
+  };
+  const error = await saveResponse(payload);
+  const statusEl = document.getElementById('save-status');
+  const badgeEl  = document.getElementById('save-badge');
+  statusEl.style.display = 'block';
+  if (error) {
+    badgeEl.textContent = '⚠️ 데이터 저장에 실패했습니다.';
+    badgeEl.className = 'save-badge err';
+  } else {
+    badgeEl.textContent = '✅ 응답이 연구 데이터베이스에 저장되었습니다.';
+    badgeEl.className = 'save-badge ok';
+  }
+}
 
 // ── Screen navigation ──────────────────────────────────
 function showScreen(id) {
@@ -105,6 +214,9 @@ function submitSurvey() {
   }
   renderResults();
   showScreen('screen-result');
+  // 결과 자동 저장
+  const { scScores, domainScores, total } = computeScores();
+  saveResultToSupabase(scScores, domainScores, total);
 }
 
 function computeScores() {
